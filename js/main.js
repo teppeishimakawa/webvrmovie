@@ -1,17 +1,9 @@
 
-//sp or pc
-var ua = navigator.userAgent;
- if (ua.indexOf('iPhone') > 0 || ua.indexOf('iPod') > 0 || ua.indexOf('Android') > 0 && ua.indexOf('Mobile') > 0)
-{var sp = true;}
- else if(ua.indexOf('iPad') > 0 || ua.indexOf('Android') > 0)
-{var sp = true;}
-
-
-
 //webGL非対応端末にはDetector.jsでエラー表示。
   if (!Detector.webgl)
   {
  var warning = Detector.getWebGLErrorMessage();
+    console.log(warning)
  document.getElementById('stage').appendChild(warning);
   }else
 //render
@@ -33,14 +25,22 @@ var ua = navigator.userAgent;
       return false;
     }
    }
+  
   if (webglAvailable()) {
     renderer = new THREE.WebGLRenderer();
   } else {
     renderer = new THREE.CanvasRenderer();
   }
+}
 
 
 
+//sp or pc
+var ua = navigator.userAgent;
+ if (ua.indexOf('iPhone') > 0 || ua.indexOf('iPod') > 0 || ua.indexOf('Android') > 0 && ua.indexOf('Mobile') > 0)
+{var sp = true;}
+ else if(ua.indexOf('iPad') > 0 || ua.indexOf('Android') > 0)
+{var sp = true;}
 
 
 
@@ -66,6 +66,7 @@ var ua = navigator.userAgent;
   video.autoplay = true;
   video.loop = true;
   video.src = "./test.mp4";
+  video.muted = true
   //playsinline 属性指定により、全画面で動画が再生されてしまうのを防ぐ
   video.setAttribute( 'webkit-playsinline', 'webkit-playsinline' );
   video.setAttribute( 'playsinline', 'playsinline' );
@@ -103,10 +104,12 @@ var ua = navigator.userAgent;
   renderer.render(scene,camera);
 
 
+var controls
 
   //pc control
+
 if(!sp){
-  var controls = new THREE.OrbitControls(camera,renderer.domElement);
+  controls = new THREE.OrbitControls(camera,renderer.domElement);
   controls.enableZoom=false;
     // 視点操作のイージングをONにする
   controls.enableDamping = true;
@@ -134,7 +137,7 @@ const requestDeviceOrientationPermission = () => {
       if (permissionState === 'granted') {
         console.log("gyro_ok")
         // 許可を得られた場合、deviceorientationをイベントリスナーに追加
-      //window.addEventListener("deviceorientation", setOrientationControls, true);
+      window.addEventListener("deviceorientation", setOrientationControls, true);
       } else {
         // 許可を得られなかった場合の処理
         console.log("disable...")
@@ -142,7 +145,12 @@ const requestDeviceOrientationPermission = () => {
     }).catch(console.error) // https通信でない場合などで許可を取得できなかった場合
   } else {
     // 上記以外のブラウザ
-    console.log("disable browser...")
+    console.log("not ios13+ browser...")
+    if(sp){
+    window.addEventListener("deviceorientation", setOrientationControls, true);
+    console.log("sp")
+}else{console.log("not sp")}
+
   }
 }
 
@@ -153,21 +161,12 @@ startButton.addEventListener('click', requestDeviceOrientationPermission, false)
 
 
 
-  //sp control
-  // スマートフォンの場合はジャイロセンサーでの操作へ変更
-
-if(sp){
-window.addEventListener("deviceorientation", setOrientationControls, true);
-}
-
-
 // ジャイロセンサーで視点操作する
 function setOrientationControls(e) {
   //スマートフォン以外で処理させない
   if (!e.alpha) {
     return;
   }
-
   controls = new THREE.DeviceOrientationControls(camera, true);
   controls.connect();
   controls.update();
@@ -181,7 +180,9 @@ function setOrientationControls(e) {
     //画面リサイズ対応
     window.addEventListener( 'resize', onWindowResize, false );
     renderer.render(scene,camera);
+    if(controls){
     controls.update();
+      }
   }
   rend();
 
